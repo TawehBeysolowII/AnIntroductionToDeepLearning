@@ -20,7 +20,6 @@ olsExample <- function(y = Y, x = X){
   return(output)
 }
 
-
 #Example 3.2
 #Gradient Descent Without Adaptive Step
 gradientDescent <- function(y = Y, x = X, alpha = .00000001, epsilon = .000001, maxiter = 300000){
@@ -123,14 +122,11 @@ require(glmnet)
 lasso <- glmnet(x = cbind(X, X[sample(1:length(X), replace = TRUE), ]), y = matrix(Y))
 summary(lasso)
 
-
-
 #Example
 #Logistic Regression 
 #Clear the workspace
 rm(list = ls())
 
-#Set the working Directory 
 #Find Data Set on Github under AnIntroductionToDeepLearning Repository
 #Upload Necessary Packages 
 require(ggplot2)
@@ -240,49 +236,92 @@ require(MASS)
 require(mclust)
 y_h <- Mclust(x_train, G = 3)$classification
 print(table(y_h, y_train))
-plot(Mclust(x_train, G = 3), what = c("classification"), dimens=c(1,3)) # using 1st and 3rd column of the iris dataset
-
+plot(Mclust(x_train, G = 3), what = c("classification"), dimens=c(1,3)) 
 confusion_matrix <- table(y_h, y_train)
 print(confusion_matrix)
 
 #Example 3.9
-#Regression Trees
+#Classification Tree
 require(rpart)
-#Cross Validating Data
-#Training Set
-x <- data[,1:2]
-y <- factor(data[,5])
-y <- as.numeric(y)
-rows <- sample(1:nrow(data), 120, replace=FALSE)
-x_train <- x[rows,]
-y_train <- y[rows]
+#Upload the necessary data 
+data  <- read.csv("/Users/tawehbeysolow/Desktop/projectportfolio/SpeedDating.csv", header = TRUE, stringsAsFactors = TRUE)
 
-#Test Set Data 
-x_test <- x[-rows,]
-y_test <- y[-rows]
+#Creating Repsponse Variable
+second_date  <- ifelse(data[,1] + data[,2] == 2, 1, 0)
+data  <- cbind(data, second_date)
 
+#Transforming Charcter Vectors into Numerical vectors for feature selection
+data$RaceM <- as.factor(data$RaceM)
+data$RaceF <- as.factor(data$RaceF)
+data$RaceM <- as.numeric(data$RaceM)
+data$RaceF <- as.numeric(data$RaceF)
 
-##########
-#Training Data
-###########
-#Building and Pruning Tree
-classification_tree <- rpart(y_train ~ x_train[,1] + x_train[,2], method = "class", data = x_train)
-y_h <- prune(classification_tree, which(classification_tree$cptable[,2] == 1))
+#Removing NA Values 
+data <- data[complete.cases(data), ]
+
+#Performing Variable Selection 
+pca_data <- prcomp(data, scale = TRUE)
+stdev_data <- pca_data$sdev
+print(stdev_data)
+n_col <- which(stdev_data >= 1.0)
+data <- data[, n_col]
+
+#Cross Validating Data 
+rows <- sample(1:150, 150, replace = FALSE)
+x_train <- data[rows, 2:ncol(data)]
+y_train <- data[rows, 1]
+
+#Correlation Matrix
+classification_tree <- rpart(y_train ~ x_train[,1] + x_train[,2] + x_train[,3] + x_train[,4]
+                             +x_train[,5] + x_train[,6], method = "class")
+pruned_tree <- prune(classification_tree, cp = .01)
 
 #Data Plot
-plot(y_h, uniform = TRUE, branch  = .7, margin = .1)
-text(y_h, all = TRUE, use.n = TRUE)
+plot(pruned_tree, uniform = TRUE, branch  = .7, margin = .1, cex = .08)
+text(pruned_tree, all = TRUE, use.n = TRUE)
 
-#Confusion Matrix
-confusion_matrix <- table(y_h$y, y_train)
+#Outputting Predictions
+y_h <- predict(classification_tree, x_train, type = "class")
+confusion_matrix <- table(y_h, y_train)
 print(confusion_matrix)
 
-###########
-#Test Data
-###########
-test_tree <- predict(classification_tree, x_test, type = "class")
-confusion_matrix <- table(test_tree, y_test)
+#Bayesian Classifier 
+require(e1071)
+#Upload the necessary data 
+data  <- read.csv("/Users/tawehbeysolow/Desktop/projectportfolio/SpeedDating.csv", header = TRUE, stringsAsFactors = TRUE)
 
+#Creating Repsponse Variable
+second_date  <- ifelse(data[,1] + data[,2] == 2, 1, 0)
+data  <- cbind(data, second_date)
 
+#Transforming Charcter Vectors into Numerical vectors for feature selection
+data$RaceM <- as.factor(data$RaceM)
+data$RaceF <- as.factor(data$RaceF)
+data$RaceM <- as.numeric(data$RaceM)
+data$RaceF <- as.numeric(data$RaceF)
 
+#Removing NA Values 
+data <- data[complete.cases(data), ]
 
+#Performing Variable Selection 
+pca_data <- prcomp(data, scale = TRUE)
+stdev_data <- pca_data$sdev
+print(stdev_data)
+n_col <- which(stdev_data >= 1.0)
+data <- data[, n_col]
+
+#Cross Validating Data 
+rows <- sample(1:150, 150, replace = FALSE)
+x_train <- data[rows, 2:ncol(data)]
+for (i in 1:ncol(x_train)){
+  x_train[,i] <- as.factor(x_train[,i])
+}
+y_train <- as.factor(data[rows, 1])
+
+#Fitting Model
+bayes_classifier <- naiveBayes(y = y_train, x = x_train , data = x_train)
+y_h <- predict(bayes_classifier, x_train, type = c("class"))
+
+#Evaluating Model 
+confusion_matrix <- table(y_h, y_train)
+print(confusion_matrix)
