@@ -136,6 +136,7 @@ y_h <- predict(cnn_model, x_test)
 Labels <- max.col(t(y_h)) - 1
 
 #AUC Score
+roc(as.factor(y_test), as.numeric(Labels))
 curve <- roc(as.factor(y_test), as.numeric(Labels))
 plot(curve, main = "ROC Curve for Convolutional Neural Network")
 
