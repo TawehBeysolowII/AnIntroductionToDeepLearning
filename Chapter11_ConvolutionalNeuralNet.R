@@ -24,7 +24,7 @@ laptop_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories
 img_data <- data.frame()
 
 #Turning Photos into Bitmaps
-#Bass Bitmaps
+#Guitar Bitmaps
 for (i in 1:length(guitar_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar/", guitar_photos[i], sep = ""))
   
@@ -48,7 +48,7 @@ for (i in 1:length(guitar_photos)){
  
 }
 
-#Crayfish Bitmaps
+#Laptop Bitmaps
 for (i in 1:length(laptop_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/laptop/", laptop_photos[i], sep = ""))
   
