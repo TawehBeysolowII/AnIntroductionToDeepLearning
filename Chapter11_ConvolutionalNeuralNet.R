@@ -12,6 +12,7 @@ rm(list = ls())
 require(mxnet)
 require(EBImage)
 require(jpeg)
+require(pROC)
 
 #Downloading the strings of the image files in each directory
 guitar_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar")
