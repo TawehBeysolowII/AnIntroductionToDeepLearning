@@ -134,8 +134,9 @@ cnn_model <- mx.model.FeedForward.create(CNN, X = x_train, y = y_train, ctx = CP
 y_h <- predict(cnn_model, x_test)
 Labels <- max.col(t(y_h)) - 1
 
-#Accuracy
-sum(diag(table(y_test, Labels)))/length(y_test)
+#AUC Score
+roc(as.factor(y_test), as.numeric(Labels))
+
 
 
 
