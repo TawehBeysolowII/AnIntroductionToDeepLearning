@@ -14,11 +14,8 @@ require(EBImage)
 require(jpeg)
 
 #Downloading the strings of the image files in each directory
-bass_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/bass")
-crayfish_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/crayfish")
-lobster_photos <-  list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/lobster")
-octopus_photos <-  list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/octopus")
-seahorse_photos <-  list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/sea_horse")
+guitar_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar")
+laptop_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories/laptop")
 
 ##################################################################################################
 #Preprocessing
@@ -28,8 +25,8 @@ img_data <- data.frame()
 
 #Turning Photos into Bitmaps
 #Bass Bitmaps
-for (i in 1:length(bass_photos)){
-  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/bass/", bass_photos[i], sep = ""))
+for (i in 1:length(guitar_photos)){
+  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar/", guitar_photos[i], sep = ""))
   
   #Reshape to 64x64 pixel size and grayscale image
   img <- Image(img, dim = c(64, 64), color = "grayscale")
@@ -52,8 +49,8 @@ for (i in 1:length(bass_photos)){
 }
 
 #Crayfish Bitmaps
-for (i in 1:length(crayfish_photos)){
-  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/crayfish/", crayfish_photos[i], sep = ""))
+for (i in 1:length(laptop_photos)){
+  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/laptop/", laptop_photos[i], sep = ""))
   
   #Reshape to 64x64 pixel size and grayscale image
   img <- Image(img, dim = c(64, 64), color = "grayscale")
@@ -67,80 +64,6 @@ for (i in 1:length(crayfish_photos)){
   
   #Adding Label 
   label <- 2
-  
-  img <- c(label, img)
-  
-  #Appending to List
-  img_data <- rbind(img_data, img)
-  
-}
-
-#Lobster Bitmaps
-for (i in 1:length(lobster_photos)){
-  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/lobster/", lobster_photos[i], sep = ""))
-  
-  #Reshape to 64x64 pixel size and grayscale image
-  img <- Image(img, dim = c(64, 64), color = "grayscale")
-  
-  #Resizing Image to 28x28 Pixel Size
-  img <- resize(img, w = 28, h = 28)
-  img <- img@.Data
-  
-  #Transforming to vector
-  img <- as.vector(t(img))
-  
-  #Adding Label 
-  label <- 3
-  
-  img <- c(label, img)
-  
-  #Appending to List
-  img_data <- rbind(img_data, img)
-  
-}
-
-
-#Octopus Bitmaps
-for (i in 1:length(octopus_photos)){
-  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/octopus/", octopus_photos[i], sep = ""))
-  
-  #Reshape to 64x64 pixel size and grayscale image
-  img <- Image(img, dim = c(64, 64), color = "grayscale")
-  
-  #Resizing Image to 28x28 Pixel Size
-  img <- resize(img, w = 28, h = 28)
-  img <- img@.Data
-  
-  #Transforming to vector
-  img <- as.vector(t(img))
-  
-  #Adding Label 
-  label <- 4
-  
-  img <- c(label, img)
-  
-  #Appending to List
-  img_data <- rbind(img_data, img)
-  
-}
-
-
-#Seahorse Bitmaps
-for (i in 1:length(seahorse_photos)){
-  img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/sea_horse/", seahorse_photos[i], sep = ""))
-  
-  #Reshape to 64x64 pixel size and grayscale image
-  img <- Image(img, dim = c(64, 64), color = "grayscale")
-  
-  #Resizing Image to 28x28 Pixel Size
-  img <- resize(img, w = 28, h = 28)
-  img <- img@.Data
-  
-  #Transforming to vector
-  img <- as.vector(t(img))
-  
-  #Adding Label 
-  label <- 5
   
   img <- c(label, img)
   
@@ -198,7 +121,7 @@ CNN <- mx.symbol.SoftmaxOutput(data = full_conn2)
 
 ##################################################################################################
 #Model Training
-mx.set.seed(50)
+mx.set.seed(500)
 CPU <- mx.cpu()
 
 
