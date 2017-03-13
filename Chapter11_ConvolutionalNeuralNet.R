@@ -212,7 +212,7 @@ y_h <- predict(cnn_model, x_test)
 Labels <- max.col(t(y_h)) - 1
 
 #Accuracy
-sum(diag(table(y_test, Labels)))/40
+sum(diag(table(y_test, Labels)))/length(y_test)
 
 
 
