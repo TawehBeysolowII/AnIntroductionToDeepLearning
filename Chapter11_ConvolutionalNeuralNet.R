@@ -1,5 +1,5 @@
 #Introduction to Deep Learning
-#Convolutional Neural Network: Image Classification 
+#Image Download and Preprocessing
 #Taweh Beysolow II 
 
 #Clear the workspace
@@ -25,7 +25,7 @@ laptop_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories
 img_data <- data.frame()
 
 #Turning Photos into Bitmaps
-#Guitar Bitmaps
+#Bass Bitmaps
 for (i in 1:length(guitar_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar/", guitar_photos[i], sep = ""))
   
@@ -49,7 +49,7 @@ for (i in 1:length(guitar_photos)){
  
 }
 
-#Laptop Bitmaps
+#Crayfish Bitmaps
 for (i in 1:length(laptop_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/laptop/", laptop_photos[i], sep = ""))
   
@@ -136,9 +136,6 @@ y_h <- predict(cnn_model, x_test)
 Labels <- max.col(t(y_h)) - 1
 
 #AUC Score
-roc(as.factor(y_test), as.numeric(Labels))
-
-
-
-
+curve <- roc(as.factor(y_test), as.numeric(Labels))
+plot(curve, main = "ROC Curve for Convolutional Neural Network")
 
