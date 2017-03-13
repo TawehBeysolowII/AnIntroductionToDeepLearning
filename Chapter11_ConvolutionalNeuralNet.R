@@ -1,5 +1,5 @@
 #Introduction to Deep Learning
-#Image Download and Preprocessing
+#Convolutional Neural Network: Image Classification 
 #Taweh Beysolow II 
 
 #Clear the workspace
