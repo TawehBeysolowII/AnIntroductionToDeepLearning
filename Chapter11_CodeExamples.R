@@ -25,7 +25,8 @@ require(Amelia)
 require(varSelRF)
 require(caret)
 require(mclust)
-
+require(mxnet)
+require(NLP)
 
 #Clear the workspace 
 rm(list = ls())
@@ -46,6 +47,8 @@ summaryStatistics <- function(array){
 data  <- read.csv("/Users/tawehbeysolow/Desktop/projectportfolio/SpeedDating.csv", header = TRUE, stringsAsFactors = TRUE)
 
 ################################################################################################
+#Autoencoders 
+###############################################################################################
 #Data Preprocessing
 #Creating response label 
 second_date  <- matrix(nrow = nrow(data), ncol = 1)
@@ -156,8 +159,8 @@ train_data <- processedData[errorRate$Reconstruction.MSE < 0.01, ]
 AUC <- c()
 for (i in 1:100){
   rows <- sample(1:nrow(processedData), 92)
-  bayesClass <- naiveBayes(y = as.factor(second_date[rows]), x = processedData[rows, ], data = processedData)
-  y_h1 <- predict(bayesClass, processedData[rows, ], type = c("class"))
+  bayesClass1 <- naiveBayes(y = as.factor(second_date[rows]), x = processedData[rows, ], data = processedData)
+  y_h1 <- predict(bayesClass1, processedData[rows, ], type = c("class"))
   AUC <- append(roc(y_h1, as.numeric(second_date[rows]))$auc, AUC)
 }
 
@@ -173,12 +176,39 @@ train_data <- processedData[errorRate$Reconstruction.MSE >= 0.01, ]
 AUC <- c()
 for (i in 1:100){
   rows <- sample(1:nrow(processedData), 92)
-  bayesClass <- naiveBayes(y = as.factor(second_date[rows]), x = processedData[rows, ], data = processedData)
-  y_h2 <- predict(bayesClass, processedData[rows, ], type = c("class"))
+  bayesClass2 <- naiveBayes(y = as.factor(second_date[rows]), x = processedData[rows, ], data = processedData)
+  y_h2 <- predict(bayesClass2, processedData[rows, ], type = c("class"))
   AUC <- append(roc(y_h2, as.numeric(second_date[rows]))$auc, AUC)
 }
 
 #Summary Statistics 
 summaryStatistics(AUC)
 
+###############################################################################################
+#Fitted Models and Out of Sample Performance
 
+AUC1 <- AUC2 <- c()
+for (i in 1:100){
+  
+  rows <- sample(1:nrow(processedData), 92)
+  y_h1 <- predict(bayesClass1, processedData[-rows,], type = c("class"))
+  y_h2 <- predict(bayesClass2, processedData[-rows,], type = c("class"))
+  AUC1 <- append(roc(y_h1, as.numeric(second_date[-rows]))$auc, AUC1)
+  AUC2 <- append(roc(y_h2, as.numeric(second_date[-rows]))$auc, AUC2)
+}
+
+summaryStatistics(AUC1)
+summaryStatistics(AUC2)
+
+
+#Non Anomaly Model
+roc(y_h1, as.numeric(second_date[-rows]))
+curve <- roc(y_h1, as.numeric(second_date[-rows]))
+plot(curve, main = "Bayes Model 1 ROC Curve")
+
+#Anomaly model
+roc(y_h2, as.numeric(second_date[-rows]))
+curve <- roc(y_h2, as.numeric(second_date[-rows]))
+plot(curve, main = "Bayes Model 2 ROC Curve")
+
+###############################################################################################
