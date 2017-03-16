@@ -1,5 +1,5 @@
 #Introduction to Deep Learning
-#Image Download and Preprocessing
+#Image Recognition Model
 #Taweh Beysolow II 
 
 #Clear the workspace
