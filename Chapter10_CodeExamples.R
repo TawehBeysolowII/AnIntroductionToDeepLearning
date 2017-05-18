@@ -23,10 +23,9 @@ require(lattice)
 require(nnet)
 require(pROC)
 require(ROCR)
-require(Amelia)
 require(varSelRF)
-require(caret)
 require(mclust)
+require(class)
 
 
 #Summary Statistics Function 
@@ -44,15 +43,15 @@ summaryStatistics <- function(array){
 
 ################################################################################################
 #Loading Data From Yahoo Finance
-stocks <- c("F", "SPY", "DJIA", "HAL", "MSFT", "SWN", "SJM", "SLG", "STJ")
+stocks <- c("F", "SPY","DIA", "HAL", "MSFT", "SWN", "SJM", "SLG", "STJ")
 stockData  <- list()
 for(i in stocks){
-  stockData[[i]] <- getSymbols(i, src = 'yahoo', auto.assign = FALSE,  return.class = "xts", from = "2013-01-01", to = "2017-01-01")
+  stockData[[i]] <- getSymbols(i, src = 'google', auto.assign = FALSE, from = "2013-01-01", to = "2017-01-01")
 }
 #Creating Matrix of close prices 
 df  <- matrix(nrow = nrow(stockData[[1]]), ncol = length(stockData))
 for (i in 1:length(stockData)){
-  df[,i]  <- stockData[[i]][,6]
+  df[,i]  <- stockData[[i]][,4]
 }
 #Calculating Returns
 return_df  <- matrix(nrow = nrow(df), ncol = ncol(df))
@@ -69,7 +68,9 @@ for (j in 1:ncol(return_df)){
 #Removing last row since it is an NA VALUE
 return_df  <- return_df[-nrow(return_df), ]
 
-cor(return_df[, -1])
+corr_df <- cor(return_df[, -1])
+colnames(corr_df) <- rownames(corr_df) <- stocks[-1]
+corr_df
 #Making DataFrame with all values except label IE all columns except for Ford since we are trying to predict this
 #Determing Which Variables Are Unnecessary 
 pca_df  <- return_df[, -1]
@@ -82,6 +83,7 @@ summary(pca)
 #Editing Existing Return Data 
 new_returns  <- return_df[, 1:7]
 colnames(new_returns)  <- stocks[1:7]
+head(new_returns)
 
 
 ################################################################################################
@@ -145,10 +147,17 @@ svr <-   SVR <- svm(valid_y ~ valid_set[,1] + valid_set[,2] + valid_set[,3] + va
 svr_y <- predict(svr, data = new_returns[-valid_rows, -1])
 svr_mse <- mse(new_returns[-valid_rows, 1], svr_y)
 
+#Tail of Predicted Value DataFrames
+svr_pred <- cbind(new_returns[-valid_rows, 1], svr_y)
+colnames(svr_pred) <- c("Actual", "Predicted")
+tail(svr_pred)
+
+ridge_pred <- cbind(new_returns[-valid_rows, 1], y_h)
+colnames(ridge_pred) <- c("Actual", "Predicted")
+tail(ridge_pred)
+
 
 cat("MSE for Ridge Regression: ", mse_ridge)
-
-
 cat("MSE for Support Vector Regression: ", svr_mse)
 
 
@@ -236,6 +245,7 @@ data$AgeF <- scale(data$AgeF)
 ################################################################################################
 #Feature Selection 
 corr <- cor(data)
+corr
 
 #Converting all Columns to Numeric prior to Input 
 for (i in 1:ncol(data)){
@@ -284,7 +294,6 @@ hist(AUC, main = "Histogram for AUC \n(Logistic Regression, lambda = 0.15)",
      xlab = "AUC Value", ylab = "Frequency", col = "firebrick3")
 
 summaryStatistics(AUC)
-
 
 
 #############################
@@ -336,10 +345,10 @@ for (i in 1:100){
 }
 
 #Summary Statistics and Various Plots
-plot(AUC, main = "AUC over 100 Iterations \n(K Nearest Neighbor)", 
+plot(AUC, main = "AUC over 100 Iterations \n(K Nearest Neighbor, K = 3)", 
      xlab = "Iterations", ylab = "AUC", type = "l", col = "cadetblue")
 
-hist(AUC, main = "Histogram for AUC \n(K Nearest Neighbor)", 
+hist(AUC, main = "Histogram for AUC \n(K Nearest Neighbor, K = 3)", 
      xlab = "AUC Value", ylab = "Frequency", col = "firebrick3")
 
 
