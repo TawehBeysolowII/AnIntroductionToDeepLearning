@@ -31,7 +31,6 @@ require(NLP)
 #Clear the workspace 
 rm(list = ls())
 
-
 #Function to be used later
 summaryStatistics <- function(array){
   Mean <- mean(array)
@@ -42,6 +41,7 @@ summaryStatistics <- function(array){
   output <- data.frame("Mean" = Mean, "Std Dev" = Std, "Min" =  Min,"Max" = Max, "Range" = Range)
   return(output)
 }
+
 
 #Upload the necessary data 
 data  <- read.csv("/Users/tawehbeysolow/Desktop/projectportfolio/SpeedDating.csv", header = TRUE, stringsAsFactors = TRUE)
@@ -140,8 +140,9 @@ training_data <- as.h2o(processedData, destination_frame = "train_data")
 
 autoencoder <- h2o.deeplearning(x = colnames(processedData), 
                                training_frame = training_data, autoencoder = TRUE, activation = "Tanh",
-                               hidden = c(6,5,6), epochs = 100)
+                               hidden = c(6,5,6), epochs = 10)
 
+autoencoder
 
 #Reconstruct Original Data Set 
 syntheticData <- h2o.anomaly(autoencoder, training_data, per_feature = FALSE)
@@ -211,4 +212,75 @@ roc(y_h2, as.numeric(second_date[-rows]))
 curve <- roc(y_h2, as.numeric(second_date[-rows]))
 plot(curve, main = "Bayes Model 2 ROC Curve")
 
-###############################################################################################
+
+#Two Sided Hypothesis Test
+require(BSDA)
+
+z.test(x = AUC1, y = AUC2, alternative = "two.sided", mu = mean(AUC2) - mean(AUC1),
+                 conf.level = 0.99, sigma.x = sd(AUC1), sigma.y = sd(AUC2))
+
+
+################################################################################################
+#Collaborative Filtering Example 
+require(lsa)
+require(bcv)
+require(gdata)
+require(Matrix)
+
+#Clear the workspace 
+rm(list = ls())
+
+#Upload the data set 
+#Please be patient this may take a handful of seconds to load. 
+data <- read.xls("/Users/tawehbeysolow/Downloads/jester-data-3.xls", sheet = 1)
+colnames(data) <- seq(1, ncol(data), 1)
+
+#Exploring Data
+head(data[,2:10])
+
+#Converting 99s to NA Values
+data[data == 99] <- NA
+
+#Creating DataFrame to Be Used Later
+origData <- data
+
+#Converting NA Values to Column Means
+for (i in 1:ncol(data)){
+  data[is.na(data[,i]), i] <- mean(data[,i], na.rm = TRUE)
+}
+
+#Imputing Data via SVD
+newData <- impute.svd(data, k = qr(data)$rank, tol = 1e-4, maxiter = 200)
+print(newData$rss)
+head(data[, 2:10])
+
+
+#Instantiating Empty Matrix to place cosine distances in
+itemData <- matrix(NA, nrow = ncol(data), ncol = 11,
+                   dimnames=list(colnames(data)))
+
+#Getting Cosine Distances 
+for (i in 1:nrow(itemData)){
+  for (j in 1:ncol(itemData)){
+    itemData[i,j] <- cosine(data[,i], data[,j])
+  }
+}
+
+head(itemData[, 1:10])
+
+#Creating Matrix for ranking similarities
+similarMat <- matrix(NA, nrow = ncol(itemData), ncol = 11)
+
+#Sorting Data Within Item Data Matrix
+for(i in 1:ncol(itemData)) {
+  rows <- order(itemData[,i], decreasing = TRUE)
+  similarMat[i,] <- (t(head(n=11, rownames(data[rows ,][i]))))
+}
+
+#Printing Result
+similarMat
+
+
+
+
+
