@@ -1,5 +1,5 @@
 #Introduction to Deep Learning
-#Image Recognition Model
+#Image Download and Preprocessing
 #Taweh Beysolow II 
 
 #Clear the workspace
@@ -25,7 +25,7 @@ laptop_photos <- list.files("/Users/tawehbeysolow/Downloads/101_ObjectCategories
 img_data <- data.frame()
 
 #Turning Photos into Bitmaps
-#Bass Bitmaps
+#Guitar Bitmaps
 for (i in 1:length(guitar_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/electric_guitar/", guitar_photos[i], sep = ""))
   
@@ -49,7 +49,7 @@ for (i in 1:length(guitar_photos)){
  
 }
 
-#Crayfish Bitmaps
+#Laptop Bitmaps
 for (i in 1:length(laptop_photos)){
   img <- readJPEG(paste("/Users/tawehbeysolow/Downloads/101_ObjectCategories/laptop/", laptop_photos[i], sep = ""))
   
@@ -78,7 +78,7 @@ training_set <- data.matrix(img_data)
 
 
 #Cross Validating Results 
-rows <- sample(1:nrow(training_set), nrow(training_set)/2)
+rows <- sample(1:nrow(training_set), nrow(training_set)*.75)
 
 #Training Set
 x_train <- t(training_set[rows, -1])
@@ -105,7 +105,7 @@ tanh_l1 <- mx.symbol.Activation(data = convolution_l1, act_type = "tanh")
 pooling_l1 <- mx.symbol.Pooling(data = tanh_l1, pool_type = "max", kernel = c(2,2), stride = c(2,2))
 
 #Layer 2
-convolution_l2 <- mx.symbol.Convolution(data = pooling_l1, kernel = c(5,5), num_filter = 50)
+convolution_l2 <- mx.symbol.Convolution(data = pooling_l1, kernel = c(5,5), num_filter = 20)
 tanh_l2 <- mx.symbol.Activation(data = convolution_l2, act_type = "tanh")
 pooling_l2 <- mx.symbol.Pooling(data = tanh_l2, pool_type = "max", kernel = c(2,2), stride = c(2,2))
 
@@ -121,22 +121,76 @@ full_conn2 <- mx.symbol.FullyConnected(data = tanh_l3, num_hidden = 40)
 CNN <- mx.symbol.SoftmaxOutput(data = full_conn2)
 
 ##################################################################################################
-#Model Training
-mx.set.seed(500)
+#Model Training and Parameter Tuning
+mx.set.seed(2017)
+#Learning Rate Parameter
+AUC <- c()
+learn_rate <- c(0.01, 0.02, 0.03, 0.04)
 CPU <- mx.cpu()
 
+for (i in 1:length(learn_rate)){
+  
+  cnn_model <- mx.model.FeedForward.create(CNN, X = x_train, y = y_train, ctx = CPU,
+                                           num.round = 50, array.batch.size = 40,
+                                           learning.rate = learn_rate[i],
+                                           momentum = 0.9, eval.metric = mx.metric.accuracy,
+                                           epoch.end.callback = mx.callback.log.train.metric(100), optimizer = "sgd")
+  #Calculating Training Accuracy
+  y_h <- predict(cnn_model, x_train)
+  Labels <- max.col(t(y_h)) - 1
+  AUC <- append(AUC, roc(as.factor(y_train), as.numeric(Labels))$auc[1])
 
+}
+
+#Plotting AUC
+plot(learn_rate, AUC, main = "AUC for CNN \n Training Learning Rate Parameter", xlab = "learning rate", 
+     ylab = "AUC Score", type = "l", col = "cadetblue")
+
+#Momentum Parameter
+mx.set.seed(2017)
+AUC1 <- c()
+mom <- c(0.5, 0.9, 1.5)
+CPU <- mx.cpu()
+
+for (i in 1:length(mom)){
+  
+  cnn_model <- mx.model.FeedForward.create(CNN, X = x_train, y = y_train, ctx = CPU,
+                                           num.round = 50, array.batch.size = 40,
+                                           learning.rate = 0.04,
+                                           momentum = mom[i], eval.metric = mx.metric.accuracy,
+                                           epoch.end.callback = mx.callback.log.train.metric(100), optimizer = "sgd")
+  #Calculating Training Accuracy
+  y_h <- predict(cnn_model, x_train)
+  Labels <- max.col(t(y_h)) - 1
+  AUC1 <- append(AUC1, roc(as.factor(y_train), as.numeric(Labels))$auc[1])
+  
+}
+
+#Plotting AUC
+plot(mom, AUC1, main = "AUC for CNN \n Training Momentum Parameter", xlab = "momentum", 
+     ylab = "AUC Score", type = "l", col = "cadetblue")
+
+
+##################################################################################################
+#Fitted Model Training
 cnn_model <- mx.model.FeedForward.create(CNN, X = x_train, y = y_train, ctx = CPU,
-                                         num.round = 480, array.batch.size = 40, learning.rate = 0.01,
-                                         momentum = 0.9, eval.metric = mx.metric.accuracy,
-                                         epoch.end.callback = mx.callback.log.train.metric(100))
+                                         num.round = 150, array.batch.size = 40,
+                                         learning.rate = 0.04, momentum = 0.9, eval.metric = mx.metric.accuracy,
+                                         optimizer = "sgd")
+#Calculating Training Set Accuracy
+y_h <- predict(cnn_model, x_train)
+Labels <- max.col(t(y_h)) - 1
+roc(as.factor(y_train), as.numeric(Labels))
+curve <- roc(as.factor(y_train), as.numeric(Labels))
 
-#Calculating Test Accuracy
+#Plotting Results
+plot(curve, main = "ROC Curve for Convolutional Neural Network \n Train Set")
+
+#Calculating Test Set Accuracy
 y_h <- predict(cnn_model, x_test)
 Labels <- max.col(t(y_h)) - 1
-
-#AUC Score
 roc(as.factor(y_test), as.numeric(Labels))
-curve <- roc(as.factor(y_test), as.numeric(Labels))
-plot(curve, main = "ROC Curve for Convolutional Neural Network")
+curve1 <- roc(as.factor(y_test), as.numeric(Labels))
 
+#Plotting Results
+plot(curve1, main = "ROC Curve for Convolutional Neural Network \n Test Set")
